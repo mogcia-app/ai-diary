@@ -1829,6 +1829,31 @@ body {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 12px;
+  gap: 12px;
+}
+
+.posts-item-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  transition: opacity 0.2s;
+}
+
+.posts-item-toggle:hover {
+  opacity: 0.7;
+}
+
+.posts-item-toggle-icon {
+  font-size: 12px;
+  color: #6b7280;
+  transition: transform 0.2s;
+  flex-shrink: 0;
 }
 
 .posts-item-title {
@@ -1868,6 +1893,11 @@ body {
   line-height: 1.6;
   white-space: pre-wrap;
   word-wrap: break-word;
+  margin-top: 12px;
+  padding: 16px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
 }
 
 @media (max-width: 768px) {

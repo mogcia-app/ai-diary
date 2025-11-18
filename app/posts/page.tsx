@@ -13,6 +13,7 @@ export default function PostsPage() {
   const [loading, setLoading] = useState(true)
   const [entries, setEntries] = useState<DiaryEntry[]>([])
   const [error, setError] = useState('')
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (!currentUser) {
@@ -65,6 +66,18 @@ export default function PostsPage() {
     }
   }
 
+  const toggleExpand = (entryId: string) => {
+    setExpandedIds((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(entryId)) {
+        newSet.delete(entryId)
+      } else {
+        newSet.add(entryId)
+      }
+      return newSet
+    })
+  }
+
   const formatDate = (date: Date) => {
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -111,25 +124,42 @@ export default function PostsPage() {
             <div className="empty-message">まだ投稿がありません</div>
           ) : (
             <div className="posts-list">
-              {entries.map((entry) => (
-                <div key={entry.id} className="posts-item">
-                  <div className="posts-item-header">
-                    <h3 className="posts-item-title">{entry.title}</h3>
-                    <button
-                      onClick={() => entry.id && handleDelete(entry.id)}
-                      className="posts-delete-button"
-                    >
-                      削除
-                    </button>
+              {entries.map((entry) => {
+                const isExpanded = entry.id ? expandedIds.has(entry.id) : false
+                return (
+                  <div key={entry.id} className="posts-item">
+                    <div className="posts-item-header">
+                      <button
+                        type="button"
+                        onClick={() => entry.id && toggleExpand(entry.id)}
+                        className="posts-item-toggle"
+                      >
+                        <span className="posts-item-toggle-icon">
+                          {isExpanded ? '▼' : '▶'}
+                        </span>
+                        <h3 className="posts-item-title">{entry.title}</h3>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          entry.id && handleDelete(entry.id)
+                        }}
+                        className="posts-delete-button"
+                      >
+                        削除
+                      </button>
+                    </div>
+                    <div className="posts-item-meta">
+                      {entry.postDate && entry.postTime
+                        ? `${entry.postDate} ${entry.postTime}`
+                        : formatTimestamp(entry.createdAt)}
+                    </div>
+                    {isExpanded && (
+                      <div className="posts-item-content">{entry.content}</div>
+                    )}
                   </div>
-                  <div className="posts-item-meta">
-                    {entry.postDate && entry.postTime
-                      ? `${entry.postDate} ${entry.postTime}`
-                      : formatTimestamp(entry.createdAt)}
-                  </div>
-                  <div className="posts-item-content">{entry.content}</div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
