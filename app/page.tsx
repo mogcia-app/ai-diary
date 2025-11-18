@@ -51,7 +51,7 @@ export default function Home() {
       return
     }
     
-    // 初期値を現在の日時に設定
+    // 初期値を現在の日時に設定（同期的に実行）
     const now = new Date()
     const year = now.getFullYear()
     const month = String(now.getMonth() + 1).padStart(2, '0')
@@ -62,7 +62,7 @@ export default function Home() {
     setPostDate(`${year}-${month}-${day}`)
     setPostTime(`${hours}:${minutes}`)
     
-    // 初期テンプレートを設定
+    // 初期テンプレートを設定（同期的に実行）
     const defaultTemplates = [
       'SNSでも投稿発信してるので見てね！\nTwitter→',
       'ご予約はこちら\nメールアドレス→',
@@ -70,10 +70,18 @@ export default function Home() {
     ]
     setEndingTemplates(defaultTemplates)
     
-    // 並列で読み込み（高速化）
-    Promise.all([loadEntries(), loadSettings()]).finally(() => {
-      setLoading(false)
-    })
+    // データ読み込みを即座に開始（非同期で実行）
+    const loadData = async () => {
+      try {
+        await Promise.all([loadEntries(), loadSettings()])
+      } catch (error) {
+        console.error('データ読み込みエラー:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    loadData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser, router])
 
@@ -88,8 +96,11 @@ export default function Home() {
           setSelectedShopIndex(userSettings.currentShopIndex)
         }
       }
-    } catch (err) {
-      console.error('設定の読み込みエラー:', err)
+    } catch (err: any) {
+      // オフライン時はエラーを無視（キャッシュから読み込めなかった場合）
+      if (err.code !== 'unavailable' && !err.message?.includes('offline')) {
+        console.error('設定の読み込みエラー:', err)
+      }
     }
   }
 
@@ -112,8 +123,11 @@ export default function Home() {
         return bTime - aTime
       })
       setEntries(loadedEntries)
-    } catch (err) {
-      console.error('投稿の読み込みエラー:', err)
+    } catch (err: any) {
+      // オフライン時はエラーを無視（キャッシュから読み込めなかった場合）
+      if (err.code !== 'unavailable' && !err.message?.includes('offline')) {
+        console.error('投稿の読み込みエラー:', err)
+      }
     }
   }
 
@@ -155,10 +169,25 @@ export default function Home() {
       setPostDate(`${year}-${month}-${day}`)
       setPostTime(`${hours}:${minutes}`)
       
-      // 投稿一覧を再読み込み
-      await loadEntries()
+      // 投稿一覧を再読み込み（オフライン時はエラーを無視）
+      try {
+        await loadEntries()
+      } catch (loadErr) {
+        // オフライン時の読み込みエラーは無視
+      }
+      
+      // オフライン時でも保存成功メッセージを表示
+      if (!navigator.onLine) {
+        setError('オフラインです。投稿は保存され、オンライン時に自動的に同期されます。')
+        setTimeout(() => setError(''), 5000)
+      }
     } catch (err: any) {
-      setError(err.message || '投稿の保存に失敗しました')
+      // オフライン時のエラーは特別なメッセージを表示
+      if (err.code === 'unavailable' || !navigator.onLine) {
+        setError('オフラインです。投稿は保存され、オンライン時に自動的に同期されます。')
+      } else {
+        setError(err.message || '投稿の保存に失敗しました')
+      }
     } finally {
       setLoading(false)
     }
@@ -289,7 +318,15 @@ export default function Home() {
         <div className="editor-card">
           <h2 className="editor-title">新規投稿</h2>
           
+          {loading && (
+            <div className="editor-loading" style={{ textAlign: 'center', padding: '20px', color: '#6b7280' }}>
+              読み込み中...
+            </div>
+          )}
+          
           {error && <div className="editor-error">{error}</div>}
+          
+          {!loading && (
 
           <form onSubmit={handleSubmit} className="editor-form">
             <div className="editor-form-group">
@@ -707,6 +744,7 @@ export default function Home() {
               {loading ? '保存中...' : '投稿を保存'}
             </button>
           </form>
+          )}
         </div>
       </div>
 

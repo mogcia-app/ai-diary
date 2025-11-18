@@ -92,8 +92,11 @@ export default function SettingsPage() {
         setShops([initialShop])
         setCurrentShopIndex(0)
       }
-    } catch (err) {
-      console.error('設定の読み込みエラー:', err)
+    } catch (err: any) {
+      // オフライン時はエラーを無視（キャッシュから読み込めなかった場合）
+      if (err.code !== 'unavailable' && !err.message?.includes('offline')) {
+        console.error('設定の読み込みエラー:', err)
+      }
       // エラー時も空の店舗を1つ作成
       const initialShop: ShopSetting = {}
       setShops([initialShop])
@@ -160,9 +163,19 @@ export default function SettingsPage() {
       setSettingsId(docId)
       setShops(updatedShops)
 
-      setSuccess('設定を保存しました')
+      // オフライン時でも保存成功メッセージを表示
+      if (!navigator.onLine) {
+        setSuccess('オフラインです。設定は保存され、オンライン時に自動的に同期されます。')
+      } else {
+        setSuccess('設定を保存しました')
+      }
     } catch (err: any) {
-      setError(err.message || '設定の保存に失敗しました')
+      // オフライン時のエラーは特別なメッセージを表示
+      if (err.code === 'unavailable' || !navigator.onLine) {
+        setError('オフラインです。設定は保存され、オンライン時に自動的に同期されます。')
+      } else {
+        setError(err.message || '設定の保存に失敗しました')
+      }
     } finally {
       setSaving(false)
     }

@@ -13,6 +13,8 @@ import {
   orderBy,
   Timestamp,
   QueryConstraint,
+  getDocFromCache,
+  getDocsFromCache,
 } from 'firebase/firestore'
 import { db } from './firebase'
 
@@ -38,7 +40,7 @@ export async function createDocument<T extends Record<string, any>>(
 
 /**
  * ドキュメントを取得
- * （FirestoreのgetDocはデフォルトでキャッシュを優先するため高速）
+ * （オフライン時はキャッシュから読み込み、オンライン時はサーバーから取得）
  */
 export async function getDocument<T>(
   collectionName: string,
@@ -48,16 +50,37 @@ export async function getDocument<T>(
     throw new Error('Firestore is not initialized')
   }
   const docRef = doc(db, collectionName, documentId)
-  // getDocはデフォルトでキャッシュを優先するため、高速に動作します
-  const docSnap = await getDoc(docRef)
-
-  if (docSnap.exists()) {
-    return {
-      id: docSnap.id,
-      ...docSnap.data(),
-    } as T
+  
+  try {
+    // まずサーバーから取得を試みる（キャッシュがあればキャッシュから）
+    const docSnap = await getDoc(docRef)
+    
+    if (docSnap.exists()) {
+      return {
+        id: docSnap.id,
+        ...docSnap.data(),
+      } as T
+    }
+    return null
+  } catch (error: any) {
+    // オフラインエラーの場合、キャッシュから読み込む
+    if (error.code === 'unavailable' || error.message?.includes('offline')) {
+      try {
+        const cachedDoc = await getDocFromCache(docRef)
+        if (cachedDoc.exists()) {
+          return {
+            id: cachedDoc.id,
+            ...cachedDoc.data(),
+          } as T
+        }
+      } catch (cacheError) {
+        // キャッシュにもない場合はnullを返す
+        console.warn('キャッシュからの読み込みも失敗:', cacheError)
+      }
+    }
+    // その他のエラーは再スロー
+    throw error
   }
-  return null
 }
 
 /**
@@ -81,7 +104,7 @@ export async function getDocuments<T>(
 
 /**
  * ユーザーIDでフィルタリングしてドキュメントを取得
- * （FirestoreのgetDocsはデフォルトでキャッシュを優先するため高速）
+ * （オフライン時はキャッシュから読み込み、オンライン時はサーバーから取得）
  */
 export async function getDocumentsByUserId<T>(
   collectionName: string,
@@ -96,12 +119,32 @@ export async function getDocumentsByUserId<T>(
     ...additionalConstraints,
   ]
   const q = query(collection(db, collectionName), ...constraints)
-  // getDocsはデフォルトでキャッシュを優先するため、高速に動作します
-  const querySnapshot = await getDocs(q)
-  return querySnapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  })) as T[]
+  
+  try {
+    // まずサーバーから取得を試みる（キャッシュがあればキャッシュから）
+    const querySnapshot = await getDocs(q)
+    return querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as T[]
+  } catch (error: any) {
+    // オフラインエラーの場合、キャッシュから読み込む
+    if (error.code === 'unavailable' || error.message?.includes('offline')) {
+      try {
+        const cachedSnapshot = await getDocsFromCache(q)
+        return cachedSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as T[]
+      } catch (cacheError) {
+        // キャッシュにもない場合は空配列を返す
+        console.warn('キャッシュからの読み込みも失敗:', cacheError)
+        return []
+      }
+    }
+    // その他のエラーは再スロー
+    throw error
+  }
 }
 
 /**

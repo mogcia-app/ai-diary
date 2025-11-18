@@ -2,7 +2,7 @@
 
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
 import { getAuth, Auth } from "firebase/auth";
-import { getFirestore, Firestore } from "firebase/firestore";
+import { getFirestore, Firestore, enableIndexedDbPersistence } from "firebase/firestore";
 
 // 環境変数のバリデーション
 const firebaseConfig = {
@@ -51,6 +51,21 @@ export const auth: Auth | null = typeof window !== "undefined" && app ? getAuth(
 
 // Initialize Firestore (クライアントサイドのみ)
 export const db: Firestore | null = typeof window !== "undefined" && app ? getFirestore(app) : null;
+
+// Firestoreの永続化を有効化（オフラインキャッシュと高速化）
+if (typeof window !== "undefined" && db) {
+  enableIndexedDbPersistence(db).catch((err) => {
+    if (err.code === 'failed-precondition') {
+      // 複数のタブが開いている場合
+      console.warn('Firestore persistence failed: Multiple tabs open');
+    } else if (err.code === 'unimplemented') {
+      // ブラウザがサポートしていない場合
+      console.warn('Firestore persistence failed: Browser does not support');
+    } else {
+      console.error('Firestore persistence error:', err);
+    }
+  });
+}
 
 export default app;
 
