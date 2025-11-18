@@ -7,6 +7,13 @@ export const metadata: Metadata = {
   description: '忙しいあなたにピッタリ、文章自動生成で毎日の投稿をラクに',
   icons: {
     icon: '/1.png',
+    apple: '/1.png',
+  },
+  manifest: '/manifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'AI Diary',
   },
 }
 
