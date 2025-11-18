@@ -213,6 +213,16 @@ export async function POST(request: NextRequest) {
           if (currentShop.preferredGift && currentShop.preferredGift.length > 0) {
             settingsParts.push(`貰いたい差し入れ: ${currentShop.preferredGift.join('、')}`)
           }
+          if (currentShop.workStartTime || currentShop.workEndTime) {
+            const workTimeParts: string[] = []
+            if (currentShop.workStartTime) {
+              workTimeParts.push(`開始: ${currentShop.workStartTime}`)
+            }
+            if (currentShop.workEndTime) {
+              workTimeParts.push(`終了: ${currentShop.workEndTime}`)
+            }
+            settingsParts.push(`出勤時間: ${workTimeParts.join('、')}`)
+          }
           if (currentShop.ngWords && currentShop.ngWords.length > 0) {
             settingsParts.push(`NGワード（使用禁止）: ${currentShop.ngWords.join('、')}`)
           }
@@ -221,7 +231,10 @@ export async function POST(request: NextRequest) {
             // カテゴリに応じた強調事項を追加
             let categorySpecificNote = ''
             if (category === '出勤前') {
-              categorySpecificNote = '\n★ 【出勤前カテゴリ】特に「希望するお客様」の設定を強く意識して、そのタイプのお客様が選びたくなるような内容にしてください。'
+              const workTimeNote = (currentShop.workStartTime || currentShop.workEndTime) 
+                ? `\n★ 【重要】出勤時間が設定されている場合は、必ずその時間を含めて投稿文に反映してください（例：「${currentShop.workStartTime || '○時'}から${currentShop.workEndTime || '○時'}まで出勤してるよ」）。`
+                : ''
+              categorySpecificNote = `\n★ 【出勤前カテゴリ】特に「希望するお客様」の設定を強く意識して、そのタイプのお客様が選びたくなるような内容にしてください。${workTimeNote}`
             } else if (category === '出勤中') {
               categorySpecificNote = '\n★ 【出勤中カテゴリ】「設定された性格」を特に意識して、「私ってこんな人なの」というように自然にアピールしてください。'
             } else if (category === '退勤後') {
