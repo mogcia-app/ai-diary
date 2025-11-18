@@ -10,8 +10,6 @@ import Header from '@/components/Header'
 export default function Home() {
   const { currentUser } = useAuth()
   const router = useRouter()
-  const [postDate, setPostDate] = useState('')
-  const [postTime, setPostTime] = useState('')
   const [selectedShopIndex, setSelectedShopIndex] = useState(0)
   const [settings, setSettings] = useState<UserSettings | null>(null)
   const [shopDropdownOpen, setShopDropdownOpen] = useState(false)
@@ -56,17 +54,6 @@ export default function Home() {
       router.push('/login')
       return
     }
-    
-    // 初期値を現在の日時に設定（同期的に実行）
-    const now = new Date()
-    const year = now.getFullYear()
-    const month = String(now.getMonth() + 1).padStart(2, '0')
-    const day = String(now.getDate()).padStart(2, '0')
-    const hours = String(now.getHours()).padStart(2, '0')
-    const minutes = String(now.getMinutes()).padStart(2, '0')
-    
-    setPostDate(`${year}-${month}-${day}`)
-    setPostTime(`${hours}:${minutes}`)
     
     // データ読み込みを即座に開始（非同期で実行）
     const loadData = async () => {
@@ -138,11 +125,6 @@ export default function Home() {
       return
     }
 
-    if (!postDate || !postTime) {
-      setError('投稿日と投稿時間を入力してください')
-      return
-    }
-
     setLoading(true)
     setError('')
     setSuccess('')
@@ -152,21 +134,11 @@ export default function Home() {
         userId: currentUser.uid,
         title: title.trim(),
         content: content.trim(),
-        postDate: postDate,
-        postTime: postTime,
       } as Omit<DiaryEntry, 'id' | 'createdAt' | 'updatedAt'>)
       
       // フォームをリセット
       setTitle('')
       setContent('')
-      const now = new Date()
-      const year = now.getFullYear()
-      const month = String(now.getMonth() + 1).padStart(2, '0')
-      const day = String(now.getDate()).padStart(2, '0')
-      const hours = String(now.getHours()).padStart(2, '0')
-      const minutes = String(now.getMinutes()).padStart(2, '0')
-      setPostDate(`${year}-${month}-${day}`)
-      setPostTime(`${hours}:${minutes}`)
       
       // 投稿一覧を再読み込み（オフライン時はエラーを無視）
       try {
@@ -354,30 +326,6 @@ export default function Home() {
           {!loading && (
 
           <form onSubmit={handleSubmit} className="editor-form">
-            <div className="editor-form-group">
-              <label htmlFor="postDate">投稿日</label>
-              <input
-                id="postDate"
-                type="date"
-                value={postDate}
-                onChange={(e) => setPostDate(e.target.value)}
-                className="editor-input"
-                required
-              />
-            </div>
-
-            <div className="editor-form-group">
-              <label htmlFor="postTime">投稿時間</label>
-              <input
-                id="postTime"
-                type="time"
-                value={postTime}
-                onChange={(e) => setPostTime(e.target.value)}
-                className="editor-input"
-                required
-              />
-            </div>
-
             {settings && settings.shops && settings.shops.length > 0 && (
               <div className="editor-form-group">
                 <label>源氏名・店舗</label>
