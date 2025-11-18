@@ -45,7 +45,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!auth) {
       throw new Error('Firebase Auth is not initialized')
     }
-    return signInWithEmailAndPassword(auth, email, password)
+    return signInWithEmailAndPassword(auth, email, password).then(() => {
+      // ログイン成功
+    })
   }
 
   function logout() {

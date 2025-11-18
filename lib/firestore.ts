@@ -23,6 +23,9 @@ export async function createDocument<T extends Record<string, any>>(
   collectionName: string,
   data: Omit<T, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<string> {
+  if (!db) {
+    throw new Error('Firestore is not initialized')
+  }
   const docRef = await addDoc(collection(db, collectionName), {
     ...data,
     createdAt: Timestamp.now(),
@@ -38,6 +41,9 @@ export async function getDocument<T>(
   collectionName: string,
   documentId: string
 ): Promise<T | null> {
+  if (!db) {
+    throw new Error('Firestore is not initialized')
+  }
   const docRef = doc(db, collectionName, documentId)
   const docSnap = await getDoc(docRef)
 
@@ -57,6 +63,9 @@ export async function getDocuments<T>(
   collectionName: string,
   constraints: QueryConstraint[] = []
 ): Promise<T[]> {
+  if (!db) {
+    throw new Error('Firestore is not initialized')
+  }
   const q = query(collection(db, collectionName), ...constraints)
   const querySnapshot = await getDocs(q)
 
@@ -89,6 +98,9 @@ export async function updateDocument(
   documentId: string,
   data: Partial<Record<string, any>>
 ): Promise<void> {
+  if (!db) {
+    throw new Error('Firestore is not initialized')
+  }
   const docRef = doc(db, collectionName, documentId)
   await updateDoc(docRef, {
     ...data,
@@ -103,6 +115,9 @@ export async function deleteDocument(
   collectionName: string,
   documentId: string
 ): Promise<void> {
+  if (!db) {
+    throw new Error('Firestore is not initialized')
+  }
   const docRef = doc(db, collectionName, documentId)
   await deleteDoc(docRef)
 }
