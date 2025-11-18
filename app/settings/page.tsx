@@ -36,12 +36,20 @@ export default function SettingsPage() {
   const [serviceStyle, setServiceStyle] = useState('')
   const [ngWords, setNgWords] = useState<string[]>([])
   const [targetCustomers, setTargetCustomers] = useState('')
+  const [hobby, setHobby] = useState<string[]>([])
+  const [specialty, setSpecialty] = useState<string[]>([])
+  const [recentHobby, setRecentHobby] = useState<string[]>([])
+  const [preferredGift, setPreferredGift] = useState<string[]>([])
 
   // 入力用のstate
   const [courseInput, setCourseInput] = useState('')
   const [personalityInput, setPersonalityInput] = useState('')
   const [traitInput, setTraitInput] = useState('')
   const [ngWordInput, setNgWordInput] = useState('')
+  const [hobbyInput, setHobbyInput] = useState('')
+  const [specialtyInput, setSpecialtyInput] = useState('')
+  const [recentHobbyInput, setRecentHobbyInput] = useState('')
+  const [preferredGiftInput, setPreferredGiftInput] = useState('')
 
   const shopIndustries = [
     { value: 'delivery', label: 'デリヘル' },
@@ -73,6 +81,10 @@ export default function SettingsPage() {
       setServiceStyle(currentShop.serviceStyle || '')
       setNgWords(currentShop.ngWords || [])
       setTargetCustomers(currentShop.targetCustomers || '')
+      setHobby(currentShop.hobby || [])
+      setSpecialty(currentShop.specialty || [])
+      setRecentHobby(currentShop.recentHobby || [])
+      setPreferredGift(currentShop.preferredGift || [])
     }
   }, [shops, currentShopIndex])
 
@@ -130,6 +142,10 @@ export default function SettingsPage() {
         serviceStyle,
         ngWords,
         targetCustomers,
+        hobby,
+        specialty,
+        recentHobby,
+        preferredGift,
       }
 
       const settingsData: Omit<UserSettings, 'id' | 'createdAt' | 'updatedAt'> = {
@@ -217,6 +233,10 @@ export default function SettingsPage() {
       serviceStyle,
       ngWords,
       targetCustomers,
+      hobby,
+      specialty,
+      recentHobby,
+      preferredGift,
     }
     setShops(updatedShops)
     setCurrentShopIndex(index)
@@ -276,6 +296,49 @@ export default function SettingsPage() {
     setNgWords(ngWords.filter(w => w !== item))
   }
 
+  const addHobby = () => {
+    if (hobbyInput.trim() && !hobby.includes(hobbyInput.trim())) {
+      setHobby([...hobby, hobbyInput.trim()])
+      setHobbyInput('')
+    }
+  }
+
+  const removeHobby = (item: string) => {
+    setHobby(hobby.filter(h => h !== item))
+  }
+
+  const addSpecialty = () => {
+    if (specialtyInput.trim() && !specialty.includes(specialtyInput.trim())) {
+      setSpecialty([...specialty, specialtyInput.trim()])
+      setSpecialtyInput('')
+    }
+  }
+
+  const removeSpecialty = (item: string) => {
+    setSpecialty(specialty.filter(s => s !== item))
+  }
+
+  const addRecentHobby = () => {
+    if (recentHobbyInput.trim() && !recentHobby.includes(recentHobbyInput.trim())) {
+      setRecentHobby([...recentHobby, recentHobbyInput.trim()])
+      setRecentHobbyInput('')
+    }
+  }
+
+  const removeRecentHobby = (item: string) => {
+    setRecentHobby(recentHobby.filter(r => r !== item))
+  }
+
+  const addPreferredGift = () => {
+    if (preferredGiftInput.trim() && !preferredGift.includes(preferredGiftInput.trim())) {
+      setPreferredGift([...preferredGift, preferredGiftInput.trim()])
+      setPreferredGiftInput('')
+    }
+  }
+
+  const removePreferredGift = (item: string) => {
+    setPreferredGift(preferredGift.filter(p => p !== item))
+  }
 
   if (!currentUser) {
     return null
@@ -603,6 +666,134 @@ export default function SettingsPage() {
                       rows={4}
                       placeholder="希望するお客様像を記述"
                     />
+                  </div>
+
+                  <div className="settings-item">
+                    <label className="settings-label">趣味（追加可能）</label>
+                    <div className="settings-tag-input">
+                      <input
+                        type="text"
+                        value={hobbyInput}
+                        onChange={(e) => setHobbyInput(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            addHobby()
+                          }
+                        }}
+                        className="settings-input"
+                        placeholder="趣味を入力してEnter"
+                      />
+                      <button type="button" onClick={addHobby} className="settings-add-button">
+                        追加
+                      </button>
+                    </div>
+                    <div className="settings-tags">
+                      {hobby.map((h) => (
+                        <span key={h} className="settings-tag">
+                          {h}
+                          <button type="button" onClick={() => removeHobby(h)} className="settings-tag-remove">
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="settings-item">
+                    <label className="settings-label">特技（追加可能）</label>
+                    <div className="settings-tag-input">
+                      <input
+                        type="text"
+                        value={specialtyInput}
+                        onChange={(e) => setSpecialtyInput(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            addSpecialty()
+                          }
+                        }}
+                        className="settings-input"
+                        placeholder="特技を入力してEnter"
+                      />
+                      <button type="button" onClick={addSpecialty} className="settings-add-button">
+                        追加
+                      </button>
+                    </div>
+                    <div className="settings-tags">
+                      {specialty.map((s) => (
+                        <span key={s} className="settings-tag">
+                          {s}
+                          <button type="button" onClick={() => removeSpecialty(s)} className="settings-tag-remove">
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="settings-item">
+                    <label className="settings-label">最近ハマってるもの（追加可能）</label>
+                    <div className="settings-tag-input">
+                      <input
+                        type="text"
+                        value={recentHobbyInput}
+                        onChange={(e) => setRecentHobbyInput(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            addRecentHobby()
+                          }
+                        }}
+                        className="settings-input"
+                        placeholder="最近ハマってるものを入力してEnter"
+                      />
+                      <button type="button" onClick={addRecentHobby} className="settings-add-button">
+                        追加
+                      </button>
+                    </div>
+                    <div className="settings-tags">
+                      {recentHobby.map((r) => (
+                        <span key={r} className="settings-tag">
+                          {r}
+                          <button type="button" onClick={() => removeRecentHobby(r)} className="settings-tag-remove">
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="settings-item">
+                    <label className="settings-label">貰いたい差し入れ（追加可能）</label>
+                    <div className="settings-tag-input">
+                      <input
+                        type="text"
+                        value={preferredGiftInput}
+                        onChange={(e) => setPreferredGiftInput(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            addPreferredGift()
+                          }
+                        }}
+                        className="settings-input"
+                        placeholder="貰いたい差し入れを入力してEnter"
+                      />
+                      <button type="button" onClick={addPreferredGift} className="settings-add-button">
+                        追加
+                      </button>
+                    </div>
+                    <div className="settings-tags">
+                      {preferredGift.map((p) => (
+                        <span key={p} className="settings-tag">
+                          {p}
+                          <button type="button" onClick={() => removePreferredGift(p)} className="settings-tag-remove">
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
 

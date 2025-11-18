@@ -204,6 +204,10 @@ export interface ShopSetting {
   serviceStyle?: string // 接客スタイル
   ngWords?: string[] // NGワード設定
   targetCustomers?: string // どんなお客さんに来て欲しいか
+  hobby?: string[] // 趣味（複数追加可能）
+  specialty?: string[] // 特技（複数追加可能）
+  recentHobby?: string[] // 最近ハマってるもの（複数追加可能）
+  preferredGift?: string[] // 貰いたい差し入れ（複数追加可能）
 }
 
 export interface UserSettings {

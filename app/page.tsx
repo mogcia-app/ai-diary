@@ -27,6 +27,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [entries, setEntries] = useState<DiaryEntry[]>([])
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [aiTheme, setAiTheme] = useState('')
   const [aiGenerating, setAiGenerating] = useState(false)
   const [endingTemplate, setEndingTemplate] = useState('')
@@ -147,6 +148,7 @@ export default function Home() {
 
     setLoading(true)
     setError('')
+    setSuccess('')
 
     try {
       await createDocument<DiaryEntry>('diaries', {
@@ -178,9 +180,13 @@ export default function Home() {
       
       // オフライン時でも保存成功メッセージを表示
       if (!navigator.onLine) {
-        setError('オフラインです。投稿は保存され、オンライン時に自動的に同期されます。')
-        setTimeout(() => setError(''), 5000)
+        setSuccess('オフラインです。投稿は保存され、オンライン時に自動的に同期されます。')
+      } else {
+        setSuccess('投稿を保存しました')
       }
+      
+      // 3秒後に成功メッセージを非表示
+      setTimeout(() => setSuccess(''), 3000)
     } catch (err: any) {
       // オフライン時のエラーは特別なメッセージを表示
       if (err.code === 'unavailable' || !navigator.onLine) {
@@ -346,6 +352,7 @@ export default function Home() {
           )}
           
           {error && <div className="editor-error">{error}</div>}
+          {success && <div className="settings-success">{success}</div>}
           
           {!loading && (
 
@@ -520,7 +527,7 @@ export default function Home() {
                 </button>
                 {toneOpen && (
                   <div className="tone-options">
-                    {['過激', '素人', '清楚', 'フレンドリー', '真面目'].map((toneOption) => (
+                    {['甘め', '強め', '清楚', 'ゆるふわ', '大人の色気', 'フレンドリー'].map((toneOption) => (
                       <button
                         key={toneOption}
                         type="button"
