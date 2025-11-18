@@ -586,9 +586,9 @@ export default function SettingsPage() {
 
                   <div className="settings-item">
                     <label className="settings-label">バック（追加可能）</label>
-                    <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', alignItems: 'flex-end' }}>
-                      <div style={{ flex: 1 }}>
-                        <label htmlFor="backTimeInput" style={{ fontSize: '14px', marginBottom: '4px', display: 'block' }}>コース時間</label>
+                    <div className="settings-back-input-group">
+                      <div className="settings-back-input-wrapper">
+                        <label htmlFor="backTimeInput" className="settings-back-label">コース時間</label>
                         <input
                           id="backTimeInput"
                           type="text"
@@ -604,8 +604,8 @@ export default function SettingsPage() {
                           placeholder="例: 60分"
                         />
                       </div>
-                      <div style={{ flex: 1 }}>
-                        <label htmlFor="backPriceInput" style={{ fontSize: '14px', marginBottom: '4px', display: 'block' }}>料金</label>
+                      <div className="settings-back-input-wrapper">
+                        <label htmlFor="backPriceInput" className="settings-back-label">料金</label>
                         <input
                           id="backPriceInput"
                           type="text"
@@ -621,7 +621,7 @@ export default function SettingsPage() {
                           placeholder="例: 10,000円"
                         />
                       </div>
-                      <button type="button" onClick={addBack} className="settings-add-button">
+                      <button type="button" onClick={addBack} className="settings-add-button settings-back-add-button">
                         追加
                       </button>
                     </div>

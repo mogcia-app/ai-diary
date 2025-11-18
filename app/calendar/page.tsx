@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Header from '@/components/Header'
-import { getDocument, getDocumentsByUserId, createDocument, updateDocument, deleteDocument, UserSettings, SalesEntry, ShopSetting, AttendanceEntry } from '@/lib/firestore'
+import { getDocument, getDocumentsByUserId, createDocument, updateDocument, deleteDocument, UserSettings, SalesEntry, ShopSetting } from '@/lib/firestore'
 
 export default function CalendarPage() {
   const { currentUser } = useAuth()
@@ -13,12 +13,9 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(true)
   const [settings, setSettings] = useState<UserSettings | null>(null)
   const [salesEntries, setSalesEntries] = useState<SalesEntry[]>([])
-  const [attendanceEntries, setAttendanceEntries] = useState<AttendanceEntry[]>([])
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [selectedShopIndex, setSelectedShopIndex] = useState(0)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isWorkDay, setIsWorkDay] = useState(false)
-  const [attendanceId, setAttendanceId] = useState<string | null>(null)
   
   // 売上入力フォームのstate（複数エントリー対応）
   interface SalesEntryItem {
@@ -42,14 +39,12 @@ export default function CalendarPage() {
     if (!currentUser) return
     setLoading(true)
     try {
-      const [loadedSettings, loadedSales, loadedAttendance] = await Promise.all([
+      const [loadedSettings, loadedSales] = await Promise.all([
         getDocument<UserSettings>('userSettings', currentUser.uid),
-        getDocumentsByUserId<SalesEntry>('sales', currentUser.uid),
-        getDocumentsByUserId<AttendanceEntry>('attendance', currentUser.uid)
+        getDocumentsByUserId<SalesEntry>('sales', currentUser.uid)
       ])
       setSettings(loadedSettings)
       setSalesEntries(loadedSales || [])
-      setAttendanceEntries(loadedAttendance || [])
       if (loadedSettings?.currentShopIndex !== undefined) {
         setSelectedShopIndex(loadedSettings.currentShopIndex)
       }
@@ -205,13 +200,6 @@ export default function CalendarPage() {
       }])
     }
     
-    // 既存の出勤日を取得
-    const existingAttendance = attendanceEntries.find(
-      att => att.date === dateStr && att.shopIndex === selectedShopIndex
-    )
-    setIsWorkDay(existingAttendance?.isWorkDay || false)
-    setAttendanceId(existingAttendance?.id || null)
-    
     setIsModalOpen(true)
   }
 
@@ -227,9 +215,8 @@ export default function CalendarPage() {
       entry => entry.courseMinutes && entry.nominationType
     )
 
-    // 出勤日がチェックされていない場合、売上エントリーが必要
-    if (!isWorkDay && validEntries.length === 0) {
-      alert('少なくとも1つの売上エントリーを入力するか、出勤日をチェックしてください')
+    if (validEntries.length === 0) {
+      alert('少なくとも1つの売上エントリーを入力してください')
       return
     }
 
@@ -277,36 +264,9 @@ export default function CalendarPage() {
         }
       }
 
-      // 出勤日を保存
-      if (attendanceId) {
-        // 既存の出勤日を更新
-        if (isWorkDay) {
-          await updateDocument('attendance', attendanceId, {
-            isWorkDay: isWorkDay,
-          })
-        } else {
-          // チェックが外された場合は削除
-          await deleteDocument('attendance', attendanceId)
-        }
-      } else if (isWorkDay) {
-        // 新しい出勤日を作成
-        await createDocument<AttendanceEntry>('attendance', {
-          userId: currentUser.uid,
-          shopIndex: selectedShopIndex,
-          date: selectedDate,
-          isWorkDay: true,
-        })
-      }
-
       await loadData()
       setIsModalOpen(false)
-      if (validEntries.length > 0 && isWorkDay) {
-        alert('売上と出勤日を保存しました')
-      } else if (validEntries.length > 0) {
-        alert('売上を保存しました')
-      } else if (isWorkDay) {
-        alert('出勤日を保存しました')
-      }
+      alert('売上を保存しました')
     } catch (error: any) {
       console.error('売上の保存エラー:', error)
       if (error.code === 'unavailable' || error.message?.includes('offline')) {
@@ -376,16 +336,6 @@ export default function CalendarPage() {
       sale => sale.date === dateStr && sale.shopIndex === selectedShopIndex
     )
     return salesForDate.reduce((sum, sale) => sum + sale.calculatedAmount, 0)
-  }
-
-  // 特定の日付が出勤日かどうかを取得
-  const isWorkDayForDate = (day: number | null): boolean => {
-    if (day === null) return false
-    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-    const attendance = attendanceEntries.find(
-      att => att.date === dateStr && att.shopIndex === selectedShopIndex
-    )
-    return attendance?.isWorkDay || false
   }
 
   // 今月の売上合計を計算
@@ -493,7 +443,6 @@ export default function CalendarPage() {
                   
                   const totalSales = getSalesForDate(day)
                   const hasSales = totalSales > 0
-                  const isWorkDay = isWorkDayForDate(day)
                   
                   return (
                     <div
@@ -503,12 +452,7 @@ export default function CalendarPage() {
                     >
                       {day !== null && (
                         <>
-                          <div className="calendar-day-header">
-                            <div className="calendar-day-number">{day}</div>
-                            {isWorkDay && (
-                              <span className="calendar-day-work-star">⭐</span>
-                            )}
-                          </div>
+                          <div className="calendar-day-number">{day}</div>
                           {hasSales && (
                             <div className="calendar-day-sales">
                               ¥{totalSales.toLocaleString()}
@@ -534,19 +478,6 @@ export default function CalendarPage() {
             </h3>
             
             <div className="sales-form">
-              {/* 出勤日チェックボックス */}
-              <div className="sales-form-group">
-                <label className="sales-checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={isWorkDay}
-                    onChange={(e) => setIsWorkDay(e.target.checked)}
-                    className="sales-checkbox"
-                  />
-                  <span>出勤日</span>
-                </label>
-              </div>
-
               {salesEntriesForDate.map((entry, index) => (
                 <div key={index} className="sales-entry-item">
                   <div className="sales-entry-header">
