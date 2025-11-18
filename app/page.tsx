@@ -296,7 +296,28 @@ export default function Home() {
           </span>
           <button
             onClick={() => {
-              window.open(window.location.href, '_blank')
+              // 複数の方法を試す
+              const url = window.location.href
+              
+              // 方法1: window.openを試す
+              const newWindow = window.open(url, '_blank', 'noopener,noreferrer')
+              
+              // 方法2: もしwindow.openが失敗した場合、location.hrefで直接遷移
+              if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+                // iOS Safariの場合、手動でブラウザを開く必要がある場合がある
+                // その場合は、URLをクリップボードにコピーして案内
+                if (navigator.clipboard) {
+                  navigator.clipboard.writeText(url).then(() => {
+                    alert('URLをクリップボードにコピーしました。\nブラウザ（Safari/Chrome）を開いて、アドレスバーに貼り付けてください。')
+                  }).catch(() => {
+                    // クリップボードにコピーできない場合、直接遷移を試す
+                    window.location.href = url
+                  })
+                } else {
+                  // クリップボードAPIが使えない場合、直接遷移
+                  window.location.href = url
+                }
+              }
             }}
             style={{
               padding: '6px 12px',
