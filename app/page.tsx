@@ -31,7 +31,12 @@ export default function Home() {
   const [aiTheme, setAiTheme] = useState('')
   const [aiGenerating, setAiGenerating] = useState(false)
   const [endingTemplate, setEndingTemplate] = useState('')
-  const [endingTemplates, setEndingTemplates] = useState<string[]>([])
+  // 初期テンプレートをuseStateの初期値として設定
+  const [endingTemplates, setEndingTemplates] = useState<string[]>([
+    'SNSでも投稿発信してるので見てね！\nTwitter→',
+    'ご予約はこちら\nメールアドレス→',
+    '今月限定クーポン配信中\n合言葉→\n予約の際にお店に伝えてね',
+  ])
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [editingText, setEditingText] = useState('')
   const [copiedTitle, setCopiedTitle] = useState(false)
@@ -62,14 +67,6 @@ export default function Home() {
     
     setPostDate(`${year}-${month}-${day}`)
     setPostTime(`${hours}:${minutes}`)
-    
-    // 初期テンプレートを設定（同期的に実行）
-    const defaultTemplates = [
-      'SNSでも投稿発信してるので見てね！\nTwitter→',
-      'ご予約はこちら\nメールアドレス→',
-      '今月限定クーポン配信中\n合言葉→\n予約の際にお店に伝えてね',
-    ]
-    setEndingTemplates(defaultTemplates)
     
     // データ読み込みを即座に開始（非同期で実行）
     const loadData = async () => {
