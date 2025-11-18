@@ -25,11 +25,15 @@ export default function PostsPage() {
   const loadEntries = async () => {
     if (!currentUser) return
     setLoading(true)
+    setError('')
     try {
       const loadedEntries = await getDocumentsByUserId<DiaryEntry>(
         'diaries',
         currentUser.uid
       )
+      console.log('読み込んだ投稿数:', loadedEntries.length)
+      console.log('読み込んだ投稿:', loadedEntries)
+      
       // 日付順（新しい順）にソート
       loadedEntries.sort((a, b) => {
         const aTime = a.createdAt?.toMillis() || 0
@@ -37,9 +41,12 @@ export default function PostsPage() {
         return bTime - aTime
       })
       setEntries(loadedEntries)
-    } catch (err) {
+    } catch (err: any) {
       console.error('投稿の読み込みエラー:', err)
-      setError('投稿の読み込みに失敗しました')
+      // オフライン時はエラーを無視（キャッシュから読み込めなかった場合）
+      if (err.code !== 'unavailable' && !err.message?.includes('offline')) {
+        setError(err.message || '投稿の読み込みに失敗しました')
+      }
     } finally {
       setLoading(false)
     }
@@ -89,6 +96,12 @@ export default function PostsPage() {
       <div className="posts-container">
         <div className="posts-card">
           <h2 className="posts-title">投稿一覧</h2>
+          
+          {!loading && entries.length > 0 && (
+            <div style={{ marginBottom: '16px', fontSize: '14px', color: '#6b7280' }}>
+              全{entries.length}件の投稿
+            </div>
+          )}
 
           {error && <div className="posts-error">{error}</div>}
 

@@ -768,22 +768,6 @@ export default function Home() {
           )}
         </div>
       </div>
-
-      {entries.length > 0 && (
-        <div className="tile-window-container">
-          {entries.map((entry) => (
-            <div key={entry.id} className="tile-window">
-              <div className="tile-window-header">{entry.title}</div>
-              <div className="tile-window-meta">
-                {entry.postDate && entry.postTime
-                  ? `${entry.postDate} ${entry.postTime}`
-                  : formatTimestamp(entry.createdAt)}
-              </div>
-              <div className="tile-window-content">{entry.content}</div>
-            </div>
-          ))}
-        </div>
-      )}
     </main>
   )
 }
