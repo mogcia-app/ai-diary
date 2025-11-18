@@ -10,13 +10,15 @@ interface HeaderProps {
   showBackButton?: boolean
   showLogoutButton?: boolean
   showPostsButton?: boolean
+  showCalendarButton?: boolean
 }
 
 export default function Header({ 
   showSettingsButton = false, 
   showBackButton = false,
   showLogoutButton = false,
-  showPostsButton = false
+  showPostsButton = false,
+  showCalendarButton = false
 }: HeaderProps) {
   const { currentUser, logout } = useAuth()
   const router = useRouter()
@@ -60,6 +62,11 @@ export default function Header({
           {showBackButton && (
             <Link href="/" className="settings-button">
               ←
+            </Link>
+          )}
+          {showCalendarButton && (
+            <Link href="/calendar" className="settings-button" title="カレンダー">
+              📅
             </Link>
           )}
           {showPostsButton && (
@@ -129,6 +136,11 @@ export default function Header({
                 {showBackButton && (
                   <Link href="/" className="header-mobile-menu-item" onClick={() => setMenuOpen(false)}>
                     ホーム
+                  </Link>
+                )}
+                {showCalendarButton && (
+                  <Link href="/calendar" className="header-mobile-menu-item" onClick={() => setMenuOpen(false)}>
+                    カレンダー
                   </Link>
                 )}
                 {showPostsButton && (

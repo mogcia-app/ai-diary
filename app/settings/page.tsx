@@ -42,6 +42,12 @@ export default function SettingsPage() {
   const [preferredGift, setPreferredGift] = useState<string[]>([])
   const [workStartTime, setWorkStartTime] = useState('')
   const [workEndTime, setWorkEndTime] = useState('')
+  const [nominationFeeFree, setNominationFeeFree] = useState('')
+  const [nominationFeePanel, setNominationFeePanel] = useState('')
+  const [nominationFeeNet, setNominationFeeNet] = useState('')
+  const [nominationFeeDirect, setNominationFeeDirect] = useState('')
+  const [backs, setBacks] = useState<string[]>([])
+  const [miscFeePercent, setMiscFeePercent] = useState('')
 
   // 入力用のstate
   const [courseInput, setCourseInput] = useState('')
@@ -52,6 +58,8 @@ export default function SettingsPage() {
   const [specialtyInput, setSpecialtyInput] = useState('')
   const [recentHobbyInput, setRecentHobbyInput] = useState('')
   const [preferredGiftInput, setPreferredGiftInput] = useState('')
+  const [backTimeInput, setBackTimeInput] = useState('')
+  const [backPriceInput, setBackPriceInput] = useState('')
 
   const shopIndustries = [
     { value: 'delivery', label: 'デリヘル' },
@@ -89,6 +97,12 @@ export default function SettingsPage() {
       setPreferredGift(currentShop.preferredGift || [])
       setWorkStartTime(currentShop.workStartTime || '')
       setWorkEndTime(currentShop.workEndTime || '')
+      setNominationFeeFree(currentShop.nominationFeeFree || '')
+      setNominationFeePanel(currentShop.nominationFeePanel || '')
+      setNominationFeeNet(currentShop.nominationFeeNet || '')
+      setNominationFeeDirect(currentShop.nominationFeeDirect || '')
+      setBacks(currentShop.backs || [])
+      setMiscFeePercent(currentShop.miscFeePercent || '')
     }
   }, [shops, currentShopIndex])
 
@@ -152,6 +166,12 @@ export default function SettingsPage() {
         preferredGift,
         workStartTime: workStartTime || undefined,
         workEndTime: workEndTime || undefined,
+        nominationFeeFree: nominationFeeFree || undefined,
+        nominationFeePanel: nominationFeePanel || undefined,
+        nominationFeeNet: nominationFeeNet || undefined,
+        nominationFeeDirect: nominationFeeDirect || undefined,
+        backs,
+        miscFeePercent: miscFeePercent || undefined,
       }
 
       const settingsData: Omit<UserSettings, 'id' | 'createdAt' | 'updatedAt'> = {
@@ -243,6 +263,14 @@ export default function SettingsPage() {
       specialty,
       recentHobby,
       preferredGift,
+      workStartTime: workStartTime || undefined,
+      workEndTime: workEndTime || undefined,
+      nominationFeeFree: nominationFeeFree || undefined,
+      nominationFeePanel: nominationFeePanel || undefined,
+      nominationFeeNet: nominationFeeNet || undefined,
+      nominationFeeDirect: nominationFeeDirect || undefined,
+      backs,
+      miscFeePercent: miscFeePercent || undefined,
     }
     setShops(updatedShops)
     setCurrentShopIndex(index)
@@ -346,13 +374,30 @@ export default function SettingsPage() {
     setPreferredGift(preferredGift.filter(p => p !== item))
   }
 
+  const addBack = () => {
+    const time = backTimeInput.trim()
+    const price = backPriceInput.trim()
+    if (time && price) {
+      const backEntry = `${time} | ${price}`
+      if (!backs.includes(backEntry)) {
+        setBacks([...backs, backEntry])
+        setBackTimeInput('')
+        setBackPriceInput('')
+      }
+    }
+  }
+
+  const removeBack = (item: string) => {
+    setBacks(backs.filter(b => b !== item))
+  }
+
   if (!currentUser) {
     return null
   }
 
   return (
     <main>
-      <Header showBackButton={true} showPostsButton={true} />
+      <Header showBackButton={true} showPostsButton={true} showCalendarButton={true} />
 
       <div className="settings-container">
         <div className="settings-card">
@@ -492,34 +537,119 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="settings-item">
-                    <label className="settings-label">お店のコース（追加可能）</label>
-                    <div className="settings-tag-input">
+                    <label className="settings-label">指名料</label>
+                    <div className="settings-form-group" style={{ marginBottom: '12px' }}>
+                      <label htmlFor="nominationFeeFree" style={{ fontSize: '14px', marginBottom: '4px', display: 'block' }}>フリー</label>
                       <input
+                        id="nominationFeeFree"
                         type="text"
-                        value={courseInput}
-                        onChange={(e) => setCourseInput(e.target.value)}
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault()
-                            addCourse()
-                          }
-                        }}
+                        value={nominationFeeFree}
+                        onChange={(e) => setNominationFeeFree(e.target.value)}
                         className="settings-input"
-                        placeholder="コース名を入力してEnter"
+                        placeholder="フリー指名料を入力"
                       />
-                      <button type="button" onClick={addCourse} className="settings-add-button">
+                    </div>
+                    <div className="settings-form-group" style={{ marginBottom: '12px' }}>
+                      <label htmlFor="nominationFeePanel" style={{ fontSize: '14px', marginBottom: '4px', display: 'block' }}>パネル</label>
+                      <input
+                        id="nominationFeePanel"
+                        type="text"
+                        value={nominationFeePanel}
+                        onChange={(e) => setNominationFeePanel(e.target.value)}
+                        className="settings-input"
+                        placeholder="パネル指名料を入力"
+                      />
+                    </div>
+                    <div className="settings-form-group" style={{ marginBottom: '12px' }}>
+                      <label htmlFor="nominationFeeNet" style={{ fontSize: '14px', marginBottom: '4px', display: 'block' }}>ネット</label>
+                      <input
+                        id="nominationFeeNet"
+                        type="text"
+                        value={nominationFeeNet}
+                        onChange={(e) => setNominationFeeNet(e.target.value)}
+                        className="settings-input"
+                        placeholder="ネット指名料を入力"
+                      />
+                    </div>
+                    <div className="settings-form-group">
+                      <label htmlFor="nominationFeeDirect" style={{ fontSize: '14px', marginBottom: '4px', display: 'block' }}>本指名</label>
+                      <input
+                        id="nominationFeeDirect"
+                        type="text"
+                        value={nominationFeeDirect}
+                        onChange={(e) => setNominationFeeDirect(e.target.value)}
+                        className="settings-input"
+                        placeholder="本指名料を入力"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="settings-item">
+                    <label className="settings-label">バック（追加可能）</label>
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', alignItems: 'flex-end' }}>
+                      <div style={{ flex: 1 }}>
+                        <label htmlFor="backTimeInput" style={{ fontSize: '14px', marginBottom: '4px', display: 'block' }}>コース時間</label>
+                        <input
+                          id="backTimeInput"
+                          type="text"
+                          value={backTimeInput}
+                          onChange={(e) => setBackTimeInput(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault()
+                              addBack()
+                            }
+                          }}
+                          className="settings-input"
+                          placeholder="例: 60分"
+                        />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label htmlFor="backPriceInput" style={{ fontSize: '14px', marginBottom: '4px', display: 'block' }}>料金</label>
+                        <input
+                          id="backPriceInput"
+                          type="text"
+                          value={backPriceInput}
+                          onChange={(e) => setBackPriceInput(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault()
+                              addBack()
+                            }
+                          }}
+                          className="settings-input"
+                          placeholder="例: 10,000円"
+                        />
+                      </div>
+                      <button type="button" onClick={addBack} className="settings-add-button">
                         追加
                       </button>
                     </div>
                     <div className="settings-tags">
-                      {shopCourses.map((course) => (
-                        <span key={course} className="settings-tag">
-                          {course}
-                          <button type="button" onClick={() => removeCourse(course)} className="settings-tag-remove">
+                      {backs.map((back) => (
+                        <span key={back} className="settings-tag">
+                          {back}
+                          <button type="button" onClick={() => removeBack(back)} className="settings-tag-remove">
                             ×
                           </button>
                         </span>
                       ))}
+                    </div>
+                  </div>
+
+                  <div className="settings-item">
+                    <label className="settings-label">雑費</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <input
+                        id="miscFeePercent"
+                        type="text"
+                        value={miscFeePercent}
+                        onChange={(e) => setMiscFeePercent(e.target.value)}
+                        className="settings-input"
+                        placeholder="例: 10"
+                        style={{ flex: '0 0 auto', width: '120px' }}
+                      />
+                      <span style={{ fontSize: '14px', color: '#374151' }}>％</span>
                     </div>
                   </div>
 

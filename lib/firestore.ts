@@ -210,6 +210,12 @@ export interface ShopSetting {
   preferredGift?: string[] // 貰いたい差し入れ（複数追加可能）
   workStartTime?: string // 出勤開始時間（例: "09:00"）
   workEndTime?: string // 出勤終了時間（例: "23:00"）
+  nominationFeeFree?: string // 指名料（フリー）
+  nominationFeePanel?: string // 指名料（パネル）
+  nominationFeeNet?: string // 指名料（ネット）
+  nominationFeeDirect?: string // 指名料（本指名）
+  backs?: string[] // バック（複数追加可能）
+  miscFeePercent?: string // 雑費％
 }
 
 export interface UserSettings {
@@ -218,6 +224,29 @@ export interface UserSettings {
   shops?: ShopSetting[] // 店舗設定の配列
   currentShopIndex?: number // 現在選択中の店舗インデックス
   endingTemplates?: string[] // 文末テンプレートの配列
+  createdAt?: Timestamp
+  updatedAt?: Timestamp
+}
+
+export interface SalesEntry {
+  id?: string
+  userId: string
+  shopIndex: number // 店舗インデックス
+  date: string // 日付（YYYY-MM-DD形式）
+  courseMinutes: string // コース時間（分）
+  nominationType: 'free' | 'panel' | 'net' | 'direct' // 指名タイプ
+  count: number // 本数（1本かどうか）
+  calculatedAmount: number // 計算された売上金額（雑費引いた後）
+  createdAt?: Timestamp
+  updatedAt?: Timestamp
+}
+
+export interface AttendanceEntry {
+  id?: string
+  userId: string
+  shopIndex: number // 店舗インデックス
+  date: string // 日付（YYYY-MM-DD形式）
+  isWorkDay: boolean // 出勤日かどうか
   createdAt?: Timestamp
   updatedAt?: Timestamp
 }

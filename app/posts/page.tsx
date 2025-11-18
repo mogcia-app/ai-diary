@@ -104,7 +104,7 @@ export default function PostsPage() {
 
   return (
     <main>
-      <Header showBackButton={true} showSettingsButton={true} showLogoutButton={true} />
+      <Header showBackButton={true} showSettingsButton={true} showCalendarButton={true} showLogoutButton={true} />
 
       <div className="posts-container">
         <div className="posts-card">

@@ -302,6 +302,7 @@ export default function Home() {
       <Header 
         showSettingsButton={true} 
         showPostsButton={true} 
+        showCalendarButton={true}
         showLogoutButton={true}
       />
       
