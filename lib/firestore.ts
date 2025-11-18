@@ -13,7 +13,6 @@ import {
   orderBy,
   Timestamp,
   QueryConstraint,
-  getDocFromCache,
 } from 'firebase/firestore'
 import { db } from './firebase'
 
@@ -38,7 +37,8 @@ export async function createDocument<T extends Record<string, any>>(
 }
 
 /**
- * ドキュメントを取得（キャッシュ優先で高速化）
+ * ドキュメントを取得
+ * （FirestoreのgetDocはデフォルトでキャッシュを優先するため高速）
  */
 export async function getDocument<T>(
   collectionName: string,
@@ -48,21 +48,7 @@ export async function getDocument<T>(
     throw new Error('Firestore is not initialized')
   }
   const docRef = doc(db, collectionName, documentId)
-  
-  // まずキャッシュから取得を試みる（高速）
-  try {
-    const cachedDoc = await getDocFromCache(docRef)
-    if (cachedDoc.exists()) {
-      return {
-        id: cachedDoc.id,
-        ...cachedDoc.data(),
-      } as T
-    }
-  } catch (error) {
-    // キャッシュにない場合はサーバーから取得
-  }
-  
-  // サーバーから取得
+  // getDocはデフォルトでキャッシュを優先するため、高速に動作します
   const docSnap = await getDoc(docRef)
 
   if (docSnap.exists()) {

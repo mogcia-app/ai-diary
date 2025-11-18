@@ -36,18 +36,21 @@ export default function Header({
   return (
     <header className="header">
       <div className="header-logo">
-        <img 
-          src="/2.png" 
-          alt="AI Diary" 
-          className="header-logo-image"
-          style={{
-            height: '200px',
-            position: 'absolute',
-            top: '50%',
-            left: '0px',
-            transform: 'translateY(-50%)',
-          }}
-        />
+        <Link href="/">
+          <img 
+            src="/2.png" 
+            alt="AI Diary" 
+            className="header-logo-image"
+            style={{
+              height: '200px',
+              position: 'absolute',
+              top: '50%',
+              left: '0px',
+              transform: 'translateY(-50%)',
+              cursor: 'pointer',
+            }}
+          />
+        </Link>
       </div>
       <div className="header-user">
         {showBackButton && (

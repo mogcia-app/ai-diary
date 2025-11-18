@@ -583,6 +583,14 @@ body {
   border: 1px solid #e5e7eb;
 }
 
+.ai-generator-section .editor-form-group {
+  margin-bottom: 20px;
+}
+
+.ai-generator-section .editor-form-group:last-child {
+  margin-bottom: 0;
+}
+
 .ai-generator-title {
   font-size: 18px;
   font-weight: 600;
@@ -756,14 +764,14 @@ body {
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  padding: 0;
+  padding: 12px 0;
   border: none;
   background: none;
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
   color: #374151;
-  margin-bottom: 8px;
+  margin-bottom: 0;
 }
 
 .category-toggle-header label {
@@ -781,8 +789,9 @@ body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
-  margin-top: 8px;
-  padding: 12px;
+  margin-top: 12px;
+  margin-bottom: 12px;
+  padding: 16px;
   background: #f9fafb;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
@@ -817,8 +826,9 @@ body {
 }
 
 .category-selected {
-  margin-top: 8px;
-  padding: 8px 12px;
+  margin-top: 12px;
+  margin-bottom: 12px;
+  padding: 10px 14px;
   background: #fce7f3;
   border: 1px solid #fbcfe8;
   border-radius: 6px;
@@ -875,7 +885,12 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 8px;
+  margin-top: 12px;
+  margin-bottom: 12px;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
 }
 
 .tone-option-button {
@@ -907,8 +922,9 @@ body {
 }
 
 .tone-selected {
-  margin-top: 8px;
-  padding: 8px 12px;
+  margin-top: 12px;
+  margin-bottom: 12px;
+  padding: 10px 14px;
   background: #fce7f3;
   border: 1px solid #fbcfe8;
   border-radius: 6px;

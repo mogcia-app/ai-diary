@@ -190,7 +190,7 @@ export default function Home() {
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
+        const errorData = await response.json().catch(() => ({}))
         throw new Error(errorData.error || 'AI生成に失敗しました')
       }
 
@@ -208,7 +208,12 @@ export default function Home() {
         setContent(data.content)
       }
     } catch (err: any) {
-      setError(err.message || 'AI生成に失敗しました')
+      // ネットワークエラーの場合
+      if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError') || !navigator.onLine) {
+        setError('インターネット接続が必要です。AI生成機能はオンライン時のみ利用できます。')
+      } else {
+        setError(err.message || 'AI生成に失敗しました')
+      }
     } finally {
       setAiGenerating(false)
     }
@@ -239,6 +244,9 @@ export default function Home() {
     return null
   }
 
+  // PWAアプリかどうかを判定
+  const isStandalone = typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches
+
   return (
     <main>
       <Header 
@@ -246,6 +254,36 @@ export default function Home() {
         showPostsButton={true} 
         showLogoutButton={true}
       />
+      
+      {isStandalone && (
+        <div style={{ 
+          padding: '12px 24px', 
+          background: '#fff3cd', 
+          borderBottom: '1px solid #ffc107',
+          textAlign: 'center'
+        }}>
+          <span style={{ fontSize: '14px', color: '#856404', marginRight: '12px' }}>
+            AI機能を使用するにはブラウザで開いてください
+          </span>
+          <button
+            onClick={() => {
+              window.open(window.location.href, '_blank')
+            }}
+            style={{
+              padding: '6px 12px',
+              background: '#ff69b4',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '13px',
+              cursor: 'pointer',
+              fontWeight: '500'
+            }}
+          >
+            ブラウザで開く
+          </button>
+        </div>
+      )}
 
       <div className="editor-container">
         <div className="editor-card">
