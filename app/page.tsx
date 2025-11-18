@@ -40,8 +40,6 @@ export default function Home() {
   const [endingTemplates, setEndingTemplates] = useState<string[]>(defaultTemplates)
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [editingText, setEditingText] = useState('')
-  const [copiedTitle, setCopiedTitle] = useState(false)
-  const [copiedContent, setCopiedContent] = useState(false)
   const [isLoadingTemplates, setIsLoadingTemplates] = useState(true)
 
   const categories = [
@@ -719,38 +717,12 @@ export default function Home() {
                   <div className="preview-item">
                     <div className="preview-item-header">
                       <label className="preview-label">タイトル</label>
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          if (title) {
-                            await navigator.clipboard.writeText(title)
-                            setCopiedTitle(true)
-                            setTimeout(() => setCopiedTitle(false), 2000)
-                          }
-                        }}
-                        className="preview-copy-button"
-                      >
-                        {copiedTitle ? 'コピーしました！' : 'コピー'}
-                      </button>
                     </div>
                     <div className="preview-text">{title || '（未入力）'}</div>
                   </div>
                   <div className="preview-item">
                     <div className="preview-item-header">
                       <label className="preview-label">本文</label>
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          if (content) {
-                            await navigator.clipboard.writeText(content)
-                            setCopiedContent(true)
-                            setTimeout(() => setCopiedContent(false), 2000)
-                          }
-                        }}
-                        className="preview-copy-button"
-                      >
-                        {copiedContent ? 'コピーしました！' : 'コピー'}
-                      </button>
                     </div>
                     <div className="preview-text preview-text-content">{content || '（未入力）'}</div>
                   </div>

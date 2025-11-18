@@ -1827,7 +1827,7 @@ body {
 .posts-item-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 12px;
   gap: 12px;
 }
@@ -1843,6 +1843,7 @@ body {
   padding: 0;
   text-align: left;
   transition: opacity 0.2s;
+  min-width: 0;
 }
 
 .posts-item-toggle:hover {
@@ -1862,6 +1863,10 @@ body {
   color: #1a1a1a;
   margin: 0;
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .posts-delete-button {
@@ -1910,12 +1915,19 @@ body {
   }
 
   .posts-item-header {
-    flex-direction: column;
-    gap: 8px;
+    align-items: center;
+  }
+
+  .posts-item-title {
+    font-size: 16px;
+    white-space: normal;
+    word-break: break-word;
   }
 
   .posts-delete-button {
-    align-self: flex-end;
+    padding: 4px 8px;
+    font-size: 11px;
+    flex-shrink: 0;
   }
 }
 
