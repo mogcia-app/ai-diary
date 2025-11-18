@@ -148,7 +148,7 @@ body {
   padding: 12px;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 16px;
   transition: border-color 0.2s;
 }
 
@@ -236,7 +236,7 @@ body {
 
   .auth-input {
     padding: 10px;
-    font-size: 13px;
+    font-size: 16px;
   }
 
   .auth-button {
@@ -613,7 +613,7 @@ body {
   padding: 12px;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 16px;
   transition: border-color 0.2s;
 }
 
@@ -626,7 +626,7 @@ body {
   padding: 12px;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 16px;
   transition: border-color 0.2s;
   resize: vertical;
   font-family: inherit;
@@ -1060,7 +1060,7 @@ body {
   padding: 12px;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 16px;
   font-family: inherit;
   line-height: 1.6;
   resize: vertical;
@@ -1178,7 +1178,7 @@ body {
   padding: 12px;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 16px;
   font-family: inherit;
   line-height: 1.6;
   resize: vertical;
@@ -1485,7 +1485,7 @@ body {
   padding: 12px;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 16px;
   transition: border-color 0.2s;
 }
 
@@ -1499,7 +1499,7 @@ body {
   padding: 12px;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 16px;
   transition: border-color 0.2s;
   resize: vertical;
   font-family: inherit;

@@ -297,9 +297,6 @@ export default function Home() {
     return null
   }
 
-  // PWAアプリかどうかを判定
-  const isStandalone = typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches
-
   return (
     <main>
       <Header 
@@ -308,57 +305,6 @@ export default function Home() {
         showLogoutButton={true}
       />
       
-      {isStandalone && (
-        <div style={{ 
-          padding: '12px 24px', 
-          background: '#fff3cd', 
-          borderBottom: '1px solid #ffc107',
-          textAlign: 'center'
-        }}>
-          <span style={{ fontSize: '14px', color: '#856404', marginRight: '12px' }}>
-            AI機能を使用するにはブラウザで開いてください
-          </span>
-          <button
-            onClick={() => {
-              // 複数の方法を試す
-              const url = window.location.href
-              
-              // 方法1: window.openを試す
-              const newWindow = window.open(url, '_blank', 'noopener,noreferrer')
-              
-              // 方法2: もしwindow.openが失敗した場合、location.hrefで直接遷移
-              if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-                // iOS Safariの場合、手動でブラウザを開く必要がある場合がある
-                // その場合は、URLをクリップボードにコピーして案内
-                if (navigator.clipboard) {
-                  navigator.clipboard.writeText(url).then(() => {
-                    alert('URLをクリップボードにコピーしました。\nブラウザ（Safari/Chrome）を開いて、アドレスバーに貼り付けてください。')
-                  }).catch(() => {
-                    // クリップボードにコピーできない場合、直接遷移を試す
-                    window.location.href = url
-                  })
-                } else {
-                  // クリップボードAPIが使えない場合、直接遷移
-                  window.location.href = url
-                }
-              }
-            }}
-            style={{
-              padding: '6px 12px',
-              background: '#ff69b4',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              fontSize: '13px',
-              cursor: 'pointer',
-              fontWeight: '500'
-            }}
-          >
-            ブラウザで開く
-          </button>
-        </div>
-      )}
-
       <div className="editor-container">
         <div className="editor-card">
           <h2 className="editor-title">新規投稿</h2>
