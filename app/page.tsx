@@ -1,84 +1,690 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { createDocument, getDocumentsByUserId, getDocument, DiaryEntry, UserSettings } from '@/lib/firestore'
+import { Timestamp } from 'firebase/firestore'
+import Header from '@/components/Header'
 
 export default function Home() {
-  const { currentUser, logout } = useAuth()
+  const { currentUser } = useAuth()
   const router = useRouter()
+  const [postDate, setPostDate] = useState('')
+  const [postTime, setPostTime] = useState('')
+  const [selectedShopIndex, setSelectedShopIndex] = useState(0)
+  const [settings, setSettings] = useState<UserSettings | null>(null)
+  const [shopDropdownOpen, setShopDropdownOpen] = useState(false)
+  const [categoryOpen, setCategoryOpen] = useState(false)
+  const [category, setCategory] = useState<string>('')
+  const [toneOpen, setToneOpen] = useState(false)
+  const [tone, setTone] = useState<string>('')
+  const [courseMinutes, setCourseMinutes] = useState<string>('')
+  const [customerType, setCustomerType] = useState<string>('')
+  const [otherInfo, setOtherInfo] = useState<string>('')
+  const [title, setTitle] = useState('')
+  const [content, setContent] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [entries, setEntries] = useState<DiaryEntry[]>([])
+  const [error, setError] = useState('')
+  const [aiTheme, setAiTheme] = useState('')
+  const [aiGenerating, setAiGenerating] = useState(false)
+  const [endingTemplate, setEndingTemplate] = useState('')
+  const [endingTemplates, setEndingTemplates] = useState<string[]>([])
+  const [editingIndex, setEditingIndex] = useState<number | null>(null)
+  const [editingText, setEditingText] = useState('')
+  const [copiedTitle, setCopiedTitle] = useState(false)
+  const [copiedContent, setCopiedContent] = useState(false)
+
+  const categories = [
+    '出勤前',
+    '出勤中',
+    'お礼',
+    '退勤後',
+    'キャラ付け',
+    'その他',
+  ]
 
   useEffect(() => {
     if (!currentUser) {
       router.push('/login')
+      return
     }
+    
+    loadEntries()
+    loadSettings()
+    
+    // 初期値を現在の日時に設定
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const day = String(now.getDate()).padStart(2, '0')
+    const hours = String(now.getHours()).padStart(2, '0')
+    const minutes = String(now.getMinutes()).padStart(2, '0')
+    
+    setPostDate(`${year}-${month}-${day}`)
+    setPostTime(`${hours}:${minutes}`)
+    
+    // 初期テンプレートを設定
+    const defaultTemplates = [
+      'SNSでも投稿発信してるので見てね！\nTwitter→',
+      'ご予約はこちら\nメールアドレス→',
+      '今月限定クーポン配信中\n合言葉→\n予約の際にお店に伝えてね',
+    ]
+    setEndingTemplates(defaultTemplates)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser, router])
 
-  const handleLogout = async () => {
+  const loadSettings = async () => {
+    if (!currentUser) return
     try {
-      await logout()
-      router.push('/login')
-    } catch (error) {
-      console.error('ログアウトエラー:', error)
+      const userSettings = await getDocument<UserSettings>('userSettings', currentUser.uid)
+      if (userSettings) {
+        setSettings(userSettings)
+        // 設定から現在の店舗インデックスを取得して更新
+        if (userSettings.currentShopIndex !== undefined) {
+          setSelectedShopIndex(userSettings.currentShopIndex)
+        }
+      }
+    } catch (err) {
+      console.error('設定の読み込みエラー:', err)
     }
+  }
+
+  const handleShopSelect = (index: number) => {
+    setSelectedShopIndex(index)
+    setShopDropdownOpen(false)
+  }
+
+  const loadEntries = async () => {
+    if (!currentUser) return
+    try {
+      const loadedEntries = await getDocumentsByUserId<DiaryEntry>(
+        'diaries',
+        currentUser.uid
+      )
+      // 日付順（新しい順）にソート
+      loadedEntries.sort((a, b) => {
+        const aTime = a.createdAt?.toMillis() || 0
+        const bTime = b.createdAt?.toMillis() || 0
+        return bTime - aTime
+      })
+      setEntries(loadedEntries)
+    } catch (err) {
+      console.error('投稿の読み込みエラー:', err)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!currentUser) return
+
+    if (!title.trim() || !content.trim()) {
+      setError('タイトルと投稿文を入力してください')
+      return
+    }
+
+    if (!postDate || !postTime) {
+      setError('投稿日と投稿時間を入力してください')
+      return
+    }
+
+    setLoading(true)
+    setError('')
+
+    try {
+      await createDocument<DiaryEntry>('diaries', {
+        userId: currentUser.uid,
+        title: title.trim(),
+        content: content.trim(),
+        postDate: postDate,
+        postTime: postTime,
+      } as Omit<DiaryEntry, 'id' | 'createdAt' | 'updatedAt'>)
+      
+      // フォームをリセット
+      setTitle('')
+      setContent('')
+      const now = new Date()
+      const year = now.getFullYear()
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const day = String(now.getDate()).padStart(2, '0')
+      const hours = String(now.getHours()).padStart(2, '0')
+      const minutes = String(now.getMinutes()).padStart(2, '0')
+      setPostDate(`${year}-${month}-${day}`)
+      setPostTime(`${hours}:${minutes}`)
+      
+      // 投稿一覧を再読み込み
+      await loadEntries()
+    } catch (err: any) {
+      setError(err.message || '投稿の保存に失敗しました')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleAiGenerate = async (autoTheme: boolean) => {
+    if (!currentUser) return
+    
+    setAiGenerating(true)
+    setError('')
+
+    try {
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          theme: aiTheme,
+          autoTheme: autoTheme,
+          category: category,
+          tone: tone,
+          courseMinutes: courseMinutes,
+          customerType: customerType,
+          otherInfo: otherInfo,
+          userId: currentUser.uid,
+          shopIndex: selectedShopIndex,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'AI生成に失敗しました')
+      }
+
+      const data = await response.json()
+      
+      if (data.theme) {
+        setAiTheme(data.theme)
+      }
+      
+      if (data.title) {
+        setTitle(data.title)
+      }
+      
+      if (data.content) {
+        setContent(data.content)
+      }
+    } catch (err: any) {
+      setError(err.message || 'AI生成に失敗しました')
+    } finally {
+      setAiGenerating(false)
+    }
+  }
+
+
+  const formatDate = (date: Date) => {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}年${month}月${day}日`
+  }
+
+  const formatTime = (date: Date) => {
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    const seconds = String(date.getSeconds()).padStart(2, '0')
+    return `${hours}:${minutes}:${seconds}`
+  }
+
+  const formatTimestamp = (timestamp: Timestamp | undefined) => {
+    if (!timestamp) return ''
+    const date = timestamp.toDate()
+    return `${formatDate(date)} ${formatTime(date)}`
   }
 
   if (!currentUser) {
     return null
   }
 
-  const tiles = [
-    {
-      id: 1,
-      title: 'タイル 1',
-      content: 'これは最初のタイルウィンドウです。',
-    },
-    {
-      id: 2,
-      title: 'タイル 2',
-      content: '2番目のタイルウィンドウのコンテンツです。',
-    },
-    {
-      id: 3,
-      title: 'タイル 3',
-      content: '3番目のタイルウィンドウです。',
-    },
-    {
-      id: 4,
-      title: 'タイル 4',
-      content: '4番目のタイルウィンドウのコンテンツです。',
-    },
-    {
-      id: 5,
-      title: 'タイル 5',
-      content: '5番目のタイルウィンドウです。',
-    },
-    {
-      id: 6,
-      title: 'タイル 6',
-      content: '6番目のタイルウィンドウのコンテンツです。',
-    },
-  ]
-
   return (
     <main>
-      <header className="header">
-        <h1>AI Diary</h1>
-        <div className="header-user">
-          <span className="header-email">{currentUser.email}</span>
-          <button onClick={handleLogout} className="logout-button">
-            ログアウト
-          </button>
+      <Header 
+        showSettingsButton={true} 
+        showPostsButton={true} 
+        showLogoutButton={true}
+      />
+
+      <div className="editor-container">
+        <div className="editor-card">
+          <h2 className="editor-title">新規投稿</h2>
+          
+          {error && <div className="editor-error">{error}</div>}
+
+          <form onSubmit={handleSubmit} className="editor-form">
+            <div className="editor-form-group">
+              <label htmlFor="postDate">投稿日</label>
+              <input
+                id="postDate"
+                type="date"
+                value={postDate}
+                onChange={(e) => setPostDate(e.target.value)}
+                className="editor-input"
+                required
+              />
+            </div>
+
+            <div className="editor-form-group">
+              <label htmlFor="postTime">投稿時間</label>
+              <input
+                id="postTime"
+                type="time"
+                value={postTime}
+                onChange={(e) => setPostTime(e.target.value)}
+                className="editor-input"
+                required
+              />
+            </div>
+
+            {settings && settings.shops && settings.shops.length > 0 && (
+              <div className="editor-form-group">
+                <label>源氏名・店舗</label>
+                {settings.shops.length === 1 ? (
+                  <div className="shop-selector-single">
+                    {settings.shops[0].stageName || '未設定'} - {settings.shops[0].shopName || '未設定'}
+                  </div>
+                ) : (
+                  <div className="shop-selector-dropdown">
+                    <button
+                      type="button"
+                      onClick={() => setShopDropdownOpen(!shopDropdownOpen)}
+                      className="shop-selector-dropdown-button"
+                    >
+                      {settings.shops[selectedShopIndex]?.stageName || '未設定'} - {settings.shops[selectedShopIndex]?.shopName || '未設定'}
+                      <span className="shop-selector-dropdown-icon">
+                        {shopDropdownOpen ? '▼' : '▶'}
+                      </span>
+                    </button>
+                    {shopDropdownOpen && (
+                      <div className="shop-selector-dropdown-menu">
+                        {settings.shops.map((shop, index) => (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => handleShopSelect(index)}
+                            className={`shop-selector-dropdown-item ${selectedShopIndex === index ? 'active' : ''}`}
+                          >
+                            {shop.stageName || '未設定'} - {shop.shopName || '未設定'}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="ai-generator-section">
+              <h3 className="ai-generator-title">AI投稿文生成</h3>
+              
+              <div className="editor-form-group">
+                <button
+                  type="button"
+                  onClick={() => setCategoryOpen(!categoryOpen)}
+                  className="category-toggle-header"
+                >
+                  <label>カテゴリ</label>
+                  <span className="category-toggle-icon">
+                    ▼
+                  </span>
+                </button>
+                {categoryOpen && (
+                  <div className="category-options">
+                    {categories.map((cat) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setCategory(category === cat ? '' : cat)}
+                        className={`category-option-button ${category === cat ? 'active' : ''}`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {category && (
+                  <div className="category-selected">
+                    選択中: {category}
+                  </div>
+                )}
+                
+                {category === 'お礼' && (
+                  <div className="category-details" style={{ marginTop: '16px' }}>
+                    <div className="editor-form-group" style={{ marginBottom: '12px' }}>
+                      <label htmlFor="courseMinutes">コース時間（分）</label>
+                      <input
+                        id="courseMinutes"
+                        type="text"
+                        value={courseMinutes}
+                        onChange={(e) => setCourseMinutes(e.target.value)}
+                        placeholder="例: 60, 90, 120"
+                        className="editor-input"
+                      />
+                    </div>
+                    
+                    <div className="editor-form-group" style={{ marginBottom: '12px' }}>
+                      <label>お客様タイプ</label>
+                      <div className="customer-type-options">
+                        {['新規', 'フリー', 'リピーター'].map((type) => (
+                          <button
+                            key={type}
+                            type="button"
+                            onClick={() => setCustomerType(customerType === type ? '' : type)}
+                            className={`customer-type-button ${customerType === type ? 'active' : ''}`}
+                          >
+                            {type}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className="editor-form-group">
+                      <label htmlFor="otherInfo">その他</label>
+                      <textarea
+                        id="otherInfo"
+                        value={otherInfo}
+                        onChange={(e) => setOtherInfo(e.target.value)}
+                        placeholder="その他の情報を入力"
+                        className="editor-textarea"
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {category === 'その他' && (
+                  <div className="category-details" style={{ marginTop: '16px' }}>
+                    <div className="editor-form-group">
+                      <label htmlFor="otherInfo">その他</label>
+                      <textarea
+                        id="otherInfo"
+                        value={otherInfo}
+                        onChange={(e) => setOtherInfo(e.target.value)}
+                        placeholder="その他の情報を入力"
+                        className="editor-textarea"
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="editor-form-group">
+                <button
+                  type="button"
+                  onClick={() => setToneOpen(!toneOpen)}
+                  className="category-toggle-header"
+                >
+                  <label>トーン</label>
+                  <span className="category-toggle-icon">
+                    ▼
+                  </span>
+                </button>
+                {toneOpen && (
+                  <div className="tone-options">
+                    {['過激', '素人', '清楚', 'フレンドリー', '真面目'].map((toneOption) => (
+                      <button
+                        key={toneOption}
+                        type="button"
+                        onClick={() => setTone(tone === toneOption ? '' : toneOption)}
+                        className={`tone-option-button ${tone === toneOption ? 'active' : ''}`}
+                      >
+                        {toneOption}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {tone && (
+                  <div className="tone-selected">
+                    選択中: {tone}
+                  </div>
+                )}
+              </div>
+              
+              <div className="editor-form-group">
+                <label htmlFor="aiTheme">
+                  投稿テーマ（オプション）
+                </label>
+                <input
+                  id="aiTheme"
+                  type="text"
+                  value={aiTheme}
+                  onChange={(e) => setAiTheme(e.target.value)}
+                  placeholder="例: 出勤しました、今日の1日など..."
+                  className="editor-input"
+                />
+                
+              </div>
+
+              <div className="ai-generator-buttons">
+                <button
+                  type="button"
+                  onClick={() => handleAiGenerate(true)}
+                  disabled={aiGenerating}
+                  className="ai-generator-button ai-generator-button-auto"
+                >
+                  {aiGenerating ? '生成中...' : '自動生成（テーマも自動選択）'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAiGenerate(false)}
+                  disabled={aiGenerating || !aiTheme.trim()}
+                  className="ai-generator-button ai-generator-button-theme"
+                >
+                  {aiGenerating ? '生成中...' : 'テーマ指定生成'}
+                </button>
+              </div>
+            </div>
+
+            <div className="editor-form-group">
+              <label htmlFor="title">タイトル</label>
+              <input
+                id="title"
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="タイトルを入力"
+                className="editor-input"
+                required
+              />
+            </div>
+
+            <div className="editor-form-group">
+              <label htmlFor="content">投稿文</label>
+              <textarea
+                id="content"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="投稿文を入力"
+                className="editor-textarea"
+                rows={8}
+                required
+              />
+            </div>
+
+            <div className="ending-template-section">
+              <h3 className="ending-template-title">文末テンプレート</h3>
+              <div className="editor-form-group">
+                <div className="ending-template-input-group">
+                  <textarea
+                    value={endingTemplate}
+                    onChange={(e) => setEndingTemplate(e.target.value)}
+                    placeholder="例: 今日もありがとうございました！"
+                    className="ending-template-input-textarea"
+                    rows={3}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (endingTemplate.trim()) {
+                        setEndingTemplates([...endingTemplates, endingTemplate.trim()])
+                        setEndingTemplate('')
+                      }
+                    }}
+                    className="ending-template-add-button"
+                  >
+                    追加
+                  </button>
+                </div>
+                {endingTemplates.length > 0 && (
+                  <div className="ending-templates-list">
+                    {endingTemplates.map((template, index) => (
+                      <div key={index} className="ending-template-item">
+                        {editingIndex === index ? (
+                          <>
+                            <textarea
+                              value={editingText}
+                              onChange={(e) => setEditingText(e.target.value)}
+                              className="ending-template-edit-textarea"
+                              rows={3}
+                            />
+                            <div className="ending-template-actions">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const updated = [...endingTemplates]
+                                  updated[index] = editingText.trim()
+                                  setEndingTemplates(updated)
+                                  setEditingIndex(null)
+                                  setEditingText('')
+                                }}
+                                className="ending-template-save-button"
+                              >
+                                保存
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingIndex(null)
+                                  setEditingText('')
+                                }}
+                                className="ending-template-cancel-button"
+                              >
+                                キャンセル
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <span className="ending-template-text">{template}</span>
+                            <div className="ending-template-actions">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setContent((prev) => {
+                                    const trimmed = prev.trim()
+                                    return trimmed ? `${trimmed}\n\n${template}` : template
+                                  })
+                                }}
+                                className="ending-template-apply-button"
+                              >
+                                適用
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingIndex(index)
+                                  setEditingText(template)
+                                }}
+                                className="ending-template-edit-button"
+                              >
+                                編集
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEndingTemplates(endingTemplates.filter((_, i) => i !== index))
+                                }}
+                                className="ending-template-remove-button"
+                              >
+                                削除
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="preview-section">
+              <h3 className="preview-title">プレビュー</h3>
+              {title || content ? (
+                <div className="preview-content">
+                  <div className="preview-item">
+                    <div className="preview-item-header">
+                      <label className="preview-label">タイトル</label>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (title) {
+                            await navigator.clipboard.writeText(title)
+                            setCopiedTitle(true)
+                            setTimeout(() => setCopiedTitle(false), 2000)
+                          }
+                        }}
+                        className="preview-copy-button"
+                      >
+                        {copiedTitle ? 'コピーしました！' : 'コピー'}
+                      </button>
+                    </div>
+                    <div className="preview-text">{title || '（未入力）'}</div>
+                  </div>
+                  <div className="preview-item">
+                    <div className="preview-item-header">
+                      <label className="preview-label">本文</label>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (content) {
+                            await navigator.clipboard.writeText(content)
+                            setCopiedContent(true)
+                            setTimeout(() => setCopiedContent(false), 2000)
+                          }
+                        }}
+                        className="preview-copy-button"
+                      >
+                        {copiedContent ? 'コピーしました！' : 'コピー'}
+                      </button>
+                    </div>
+                    <div className="preview-text preview-text-content">{content || '（未入力）'}</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="preview-empty-message">
+                  タイトルまたは本文を入力すると、ここでプレビューを確認できます
+                </div>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="editor-submit-button"
+            >
+              {loading ? '保存中...' : '投稿を保存'}
+            </button>
+          </form>
         </div>
-      </header>
-      <div className="tile-window-container">
-        {tiles.map((tile) => (
-          <div key={tile.id} className="tile-window">
-            <div className="tile-window-header">{tile.title}</div>
-            <div className="tile-window-content">{tile.content}</div>
-          </div>
-        ))}
       </div>
+
+      {entries.length > 0 && (
+        <div className="tile-window-container">
+          {entries.map((entry) => (
+            <div key={entry.id} className="tile-window">
+              <div className="tile-window-header">{entry.title}</div>
+              <div className="tile-window-meta">
+                {entry.postDate && entry.postTime
+                  ? `${entry.postDate} ${entry.postTime}`
+                  : formatTimestamp(entry.createdAt)}
+              </div>
+              <div className="tile-window-content">{entry.content}</div>
+            </div>
+          ))}
+        </div>
+      )}
     </main>
   )
 }

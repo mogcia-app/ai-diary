@@ -43,6 +43,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               className="auth-input"
+              autoComplete="email"
             />
           </div>
           <div className="auth-form-group">
@@ -54,6 +55,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               className="auth-input"
+              autoComplete="current-password"
             />
           </div>
           <button

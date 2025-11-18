@@ -1,3 +1,5 @@
+'use client'
+
 import {
   collection,
   doc,
@@ -128,6 +130,32 @@ export interface DiaryEntry {
   userId: string
   title: string
   content: string
+  postDate?: string
+  postTime?: string
+  createdAt?: Timestamp
+  updatedAt?: Timestamp
+}
+
+export interface ShopSetting {
+  stageName?: string // 源氏名
+  catchphrase?: string // キャッチコピー
+  shopIndustry?: 'delivery' | 'soap' | 'ns-soap' // お店の業種
+  shopName?: string // お店の名前
+  shopCourses?: string[] // お店のコース（複数追加可能）
+  priceRange?: 'low' | 'medium' | 'high' // 価格帯
+  shopConcept?: string // お店のコンセプト
+  shopPersonalities?: string[] // お店が設定した性格（複数選択）
+  shopTraits?: string[] // お店が設定した個性（複数選択）
+  serviceStyle?: string // 接客スタイル
+  ngWords?: string[] // NGワード設定
+  targetCustomers?: string // どんなお客さんに来て欲しいか
+}
+
+export interface UserSettings {
+  id?: string
+  userId: string
+  shops?: ShopSetting[] // 店舗設定の配列
+  currentShopIndex?: number // 現在選択中の店舗インデックス
   createdAt?: Timestamp
   updatedAt?: Timestamp
 }

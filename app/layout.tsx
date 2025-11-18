@@ -4,7 +4,10 @@ import { AuthProvider } from '@/contexts/AuthContext'
 
 export const metadata: Metadata = {
   title: 'AI Diary',
-  description: 'AI Diary Application',
+  description: '忙しいあなたにピッタリ、文章自動生成で毎日の投稿をラクに',
+  icons: {
+    icon: '/1.png',
+  },
 }
 
 export default function RootLayout({

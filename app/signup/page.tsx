@@ -55,6 +55,7 @@ export default function SignupPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               className="auth-input"
+              autoComplete="email"
             />
           </div>
           <div className="auth-form-group">
@@ -67,6 +68,7 @@ export default function SignupPage() {
               required
               className="auth-input"
               minLength={6}
+              autoComplete="new-password"
             />
           </div>
           <div className="auth-form-group">
@@ -79,6 +81,7 @@ export default function SignupPage() {
               required
               className="auth-input"
               minLength={6}
+              autoComplete="new-password"
             />
           </div>
           <button
