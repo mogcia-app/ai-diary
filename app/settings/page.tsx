@@ -12,7 +12,7 @@ import Header from '@/components/Header'
 export default function SettingsPage() {
   const { currentUser } = useAuth()
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')

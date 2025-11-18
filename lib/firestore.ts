@@ -13,6 +13,7 @@ import {
   orderBy,
   Timestamp,
   QueryConstraint,
+  getDocFromCache,
 } from 'firebase/firestore'
 import { db } from './firebase'
 
@@ -37,7 +38,7 @@ export async function createDocument<T extends Record<string, any>>(
 }
 
 /**
- * ドキュメントを取得
+ * ドキュメントを取得（キャッシュ優先で高速化）
  */
 export async function getDocument<T>(
   collectionName: string,
@@ -47,6 +48,21 @@ export async function getDocument<T>(
     throw new Error('Firestore is not initialized')
   }
   const docRef = doc(db, collectionName, documentId)
+  
+  // まずキャッシュから取得を試みる（高速）
+  try {
+    const cachedDoc = await getDocFromCache(docRef)
+    if (cachedDoc.exists()) {
+      return {
+        id: cachedDoc.id,
+        ...cachedDoc.data(),
+      } as T
+    }
+  } catch (error) {
+    // キャッシュにない場合はサーバーから取得
+  }
+  
+  // サーバーから取得
   const docSnap = await getDoc(docRef)
 
   if (docSnap.exists()) {
@@ -79,17 +95,27 @@ export async function getDocuments<T>(
 
 /**
  * ユーザーIDでフィルタリングしてドキュメントを取得
+ * （FirestoreのgetDocsはデフォルトでキャッシュを優先するため高速）
  */
 export async function getDocumentsByUserId<T>(
   collectionName: string,
   userId: string,
   additionalConstraints: QueryConstraint[] = []
 ): Promise<T[]> {
+  if (!db) {
+    throw new Error('Firestore is not initialized')
+  }
   const constraints = [
     where('userId', '==', userId),
     ...additionalConstraints,
   ]
-  return getDocuments<T>(collectionName, constraints)
+  const q = query(collection(db, collectionName), ...constraints)
+  // getDocsはデフォルトでキャッシュを優先するため、高速に動作します
+  const querySnapshot = await getDocs(q)
+  return querySnapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as T[]
 }
 
 /**

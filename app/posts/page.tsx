@@ -10,7 +10,7 @@ import Header from '@/components/Header'
 export default function PostsPage() {
   const { currentUser } = useAuth()
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [entries, setEntries] = useState<DiaryEntry[]>([])
   const [error, setError] = useState('')
 

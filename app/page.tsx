@@ -24,7 +24,7 @@ export default function Home() {
   const [otherInfo, setOtherInfo] = useState<string>('')
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [entries, setEntries] = useState<DiaryEntry[]>([])
   const [error, setError] = useState('')
   const [aiTheme, setAiTheme] = useState('')
@@ -51,9 +51,6 @@ export default function Home() {
       return
     }
     
-    loadEntries()
-    loadSettings()
-    
     // 初期値を現在の日時に設定
     const now = new Date()
     const year = now.getFullYear()
@@ -72,6 +69,11 @@ export default function Home() {
       '今月限定クーポン配信中\n合言葉→\n予約の際にお店に伝えてね',
     ]
     setEndingTemplates(defaultTemplates)
+    
+    // 並列で読み込み（高速化）
+    Promise.all([loadEntries(), loadSettings()]).finally(() => {
+      setLoading(false)
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser, router])
 
