@@ -40,6 +40,8 @@ export default function SettingsPage() {
   const [specialty, setSpecialty] = useState<string[]>([])
   const [recentHobby, setRecentHobby] = useState<string[]>([])
   const [preferredGift, setPreferredGift] = useState<string[]>([])
+  const [workStartTime, setWorkStartTime] = useState('')
+  const [workEndTime, setWorkEndTime] = useState('')
 
   // 入力用のstate
   const [courseInput, setCourseInput] = useState('')
@@ -85,6 +87,8 @@ export default function SettingsPage() {
       setSpecialty(currentShop.specialty || [])
       setRecentHobby(currentShop.recentHobby || [])
       setPreferredGift(currentShop.preferredGift || [])
+      setWorkStartTime(currentShop.workStartTime || '')
+      setWorkEndTime(currentShop.workEndTime || '')
     }
   }, [shops, currentShopIndex])
 
@@ -146,6 +150,8 @@ export default function SettingsPage() {
         specialty,
         recentHobby,
         preferredGift,
+        workStartTime: workStartTime || undefined,
+        workEndTime: workEndTime || undefined,
       }
 
       const settingsData: Omit<UserSettings, 'id' | 'createdAt' | 'updatedAt'> = {
@@ -460,6 +466,28 @@ export default function SettingsPage() {
                       onChange={(e) => setShopName(e.target.value)}
                       className="settings-input"
                       placeholder="お店の名前を入力"
+                    />
+                  </div>
+
+                  <div className="settings-item">
+                    <label className="settings-label" htmlFor="workStartTime">出勤開始時間</label>
+                    <input
+                      id="workStartTime"
+                      type="time"
+                      value={workStartTime}
+                      onChange={(e) => setWorkStartTime(e.target.value)}
+                      className="settings-input"
+                    />
+                  </div>
+
+                  <div className="settings-item">
+                    <label className="settings-label" htmlFor="workEndTime">出勤終了時間</label>
+                    <input
+                      id="workEndTime"
+                      type="time"
+                      value={workEndTime}
+                      onChange={(e) => setWorkEndTime(e.target.value)}
+                      className="settings-input"
                     />
                   </div>
 

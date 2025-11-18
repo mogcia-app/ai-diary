@@ -208,6 +208,8 @@ export interface ShopSetting {
   specialty?: string[] // 特技（複数追加可能）
   recentHobby?: string[] // 最近ハマってるもの（複数追加可能）
   preferredGift?: string[] // 貰いたい差し入れ（複数追加可能）
+  workStartTime?: string // 出勤開始時間（例: "09:00"）
+  workEndTime?: string // 出勤終了時間（例: "23:00"）
 }
 
 export interface UserSettings {
