@@ -36,22 +36,10 @@ export async function POST(request: NextRequest) {
 
     // プロンプトを生成
     let selectedTheme = ''
-    if (autoTheme) {
-      // 自動テーマ選択の場合
-      const themes = [
-        '今日の1日',
-        '出勤しました',
-        '今日の出来事',
-        '日記',
-        '今日の気持ち',
-        '今日の学び',
-        '今日の食事',
-        '今日の運動',
-      ]
-      selectedTheme = themes[Math.floor(Math.random() * themes.length)]
-    } else {
+    if (!autoTheme) {
       selectedTheme = theme
     }
+    // autoThemeがtrueの場合はテーマなしでカテゴリとトーンだけで生成
 
     // カテゴリに応じたプロンプトを生成
     let categoryContext = ''

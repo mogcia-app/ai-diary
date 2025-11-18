@@ -215,6 +215,7 @@ export interface UserSettings {
   userId: string
   shops?: ShopSetting[] // 店舗設定の配列
   currentShopIndex?: number // 現在選択中の店舗インデックス
+  endingTemplates?: string[] // 文末テンプレートの配列
   createdAt?: Timestamp
   updatedAt?: Timestamp
 }

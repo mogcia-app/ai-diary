@@ -3,8 +3,10 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { createDocument, getDocumentsByUserId, getDocument, DiaryEntry, UserSettings } from '@/lib/firestore'
+import { createDocument, getDocumentsByUserId, getDocument, updateDocument, DiaryEntry, UserSettings } from '@/lib/firestore'
 import { Timestamp } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import { doc, setDoc } from 'firebase/firestore'
 import Header from '@/components/Header'
 
 export default function Home() {
@@ -29,16 +31,18 @@ export default function Home() {
   const [aiTheme, setAiTheme] = useState('')
   const [aiGenerating, setAiGenerating] = useState(false)
   const [endingTemplate, setEndingTemplate] = useState('')
-  // 初期テンプレートをuseStateの初期値として設定
-  const [endingTemplates, setEndingTemplates] = useState<string[]>([
+  // 初期テンプレート
+  const defaultTemplates = [
     'SNSでも投稿発信してるので見てね！\nTwitter→',
     'ご予約はこちら\nメールアドレス→',
     '今月限定クーポン配信中\n合言葉→\n予約の際にお店に伝えてね',
-  ])
+  ]
+  const [endingTemplates, setEndingTemplates] = useState<string[]>(defaultTemplates)
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [editingText, setEditingText] = useState('')
   const [copiedTitle, setCopiedTitle] = useState(false)
   const [copiedContent, setCopiedContent] = useState(false)
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(true)
 
   const categories = [
     '出勤前',
@@ -70,6 +74,14 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser, router])
 
+  // 文末テンプレートが変更されたときに自動保存（初期読み込み時は除外）
+  useEffect(() => {
+    if (!isLoadingTemplates && currentUser) {
+      saveEndingTemplates(endingTemplates)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [endingTemplates])
+
   const loadSettings = async () => {
     if (!currentUser) return
     try {
@@ -80,12 +92,51 @@ export default function Home() {
         if (userSettings.currentShopIndex !== undefined) {
           setSelectedShopIndex(userSettings.currentShopIndex)
         }
+        // 設定から文末テンプレートを読み込む（デフォルト値がある場合はそれを使用）
+        if (userSettings.endingTemplates && userSettings.endingTemplates.length > 0) {
+          setEndingTemplates(userSettings.endingTemplates)
+        }
       }
+      setIsLoadingTemplates(false)
     } catch (err: any) {
       // オフライン時はエラーを無視（キャッシュから読み込めなかった場合）
       if (err.code !== 'unavailable' && !err.message?.includes('offline')) {
         console.error('設定の読み込みエラー:', err)
       }
+      setIsLoadingTemplates(false)
+    }
+  }
+
+  const saveEndingTemplates = async (templates: string[]) => {
+    if (!currentUser) return
+    try {
+      const docId = currentUser.uid
+      const existing = await getDocument<UserSettings>('userSettings', docId)
+      
+      const settingsData: Omit<UserSettings, 'id' | 'createdAt' | 'updatedAt'> = {
+        userId: currentUser.uid,
+        shops: existing?.shops || [],
+        currentShopIndex: existing?.currentShopIndex ?? 0,
+        endingTemplates: templates,
+      }
+
+      if (existing) {
+        // 更新
+        await updateDocument('userSettings', docId, settingsData)
+      } else {
+        // 新規作成
+        if (!db) {
+          throw new Error('Firestore is not initialized')
+        }
+        const docRef = doc(db, 'userSettings', docId)
+        await setDoc(docRef, {
+          ...settingsData,
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+        }, { merge: false })
+      }
+    } catch (err: any) {
+      console.error('文末テンプレートの保存エラー:', err)
     }
   }
 
@@ -567,7 +618,8 @@ export default function Home() {
                     type="button"
                     onClick={() => {
                       if (endingTemplate.trim()) {
-                        setEndingTemplates([...endingTemplates, endingTemplate.trim()])
+                        const updated = [...endingTemplates, endingTemplate.trim()]
+                        setEndingTemplates(updated)
                         setEndingTemplate('')
                       }
                     }}
@@ -643,7 +695,8 @@ export default function Home() {
                               <button
                                 type="button"
                                 onClick={() => {
-                                  setEndingTemplates(endingTemplates.filter((_, i) => i !== index))
+                                  const updated = endingTemplates.filter((_, i) => i !== index)
+                                  setEndingTemplates(updated)
                                 }}
                                 className="ending-template-remove-button"
                               >
